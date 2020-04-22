@@ -1,40 +1,13 @@
-import ctypes
 import numpy as np
 from mycontextmanagers import *
-import multiprocessing as mp
-from multiprocessing import Pool, Array, Process, Queue
-
-
-def multsequential(a, b):
-    res = np.zeros((len(a), len(a[0])))
-    for i in range(len(a)):
-        for j in range(len(b[0])):
-            for k in range(len(a[0])):
-                res[i][j] += a[i][k] * b[k][j];
-    return res
-
-
-def multmultiprocessing(a, b):
-    res = np.zeros((len(a), len(a[0])))
-    #
-    # def f(a, b, i, j):
-    #     for k in range(len(a[0])):
-    #         res[i][j] += a[i][k] * b[k][j];
-    #
-    # if __name__ == '__main__':
-    #     with Pool(processes=4) as pool:
-    #         pool.map(f, [(a, b, i, j) for i in range(len(a)) for j in range(len(b[0]))])
-    return res
-
-
-def multcython(a, b):
-    pass
+from multiprocessing import Pool, Array
 
 
 def mult(a, b, mode):
+    global m, n, p
     result = 'Warning'
     if len(a[0]) != len(b):
-        print('Invalid matrix dimensions: (m×n) × (n×k) = (m×k)')
+        print('Invalid matrix dimensions: (m×n) × (n×p) = (m×p)')
     elif mode == 'sequential':
         result = multsequential(a, b)
     elif mode == 'multiprocessing':
@@ -46,37 +19,67 @@ def mult(a, b, mode):
     return result
 
 
-a = np.array([[2, 0], [0, 2]])
-b = np.array([[1, 2], [3, 4]])
+def multsequential(a, b):
+    global m, n, p
+    result = np.zeros((m, p), 'i')
+    for i in range(m):
+        for j in range(p):
+            for k in range(n):
+                result[i][j] += a[i][k] * b[k][j]
+    return result
 
 
-# with time_manager():
-#     print('Sequential:')
-#     c = mult(a, b, 'sequential')
-# print(c)
-#
-# with time_manager():
-#     print('Multiprocessing')
-#     d = mult(a, b, 'multiprocessing')
-# print(d)
+def multmultiprocessing(A, B):
+    global m, n, p, threadNumber, part, mp_arr
+    with Pool(threadNumber) as pool:
+        pool.map(partmult, range(0, m, part))
+    arr = np.frombuffer(mp_arr.get_obj(), dtype='i')
+    C = arr.reshape((m, p))
+    return C
 
-# a = [1, 2]
-# def f(x):
-#     return x[0] + x[1]
-# if __name__ == '__main__':
-#     with Pool(processes=2) as pool:
-#         print(pool.map(f,(a,)))
 
-def f(a):
-    for i in range(len(a)):
-        a[i] = i
+def partmult(start):
+    global A, B, mp_arr, part, m, n, p
+    arr = np.frombuffer(mp_arr.get_obj(), dtype='i')
+    C = arr.reshape((m, p))
+    for i in range(start, min(start + part, m)):
+        for j in range(p):
+            for k in range(n):
+                C[i][j] += A[i][k] * B[k][j]
 
-if __name__ == '__main__':
-    # arr = mp.RawArray('i', 10)
-    arr = Array('i', 10)
-    with Pool(2) as p:
-        p.map(f, (arr,))
-    # p = Process(target=f, args=(arr,))
-    # p.start()
-    # p.join()
-    print(arr[:])
+
+def multcython(a, b):
+    pass
+
+
+
+md1 = (10_000, 20_000, 15_000)
+md2 = (10_000, 10_000, 10_000)
+md3 = (100_000, 100_000, 100_000)
+md4 = (500_000, 500_000, 500_000)
+md5 = (1_000_000, 1_000_000, 1_000_000)
+# На заданных размерностях работает очень долго,
+# поэтому тестирую на mdcustom
+mdcustom = (100, 200, 150)
+(m, n, p) = mdcustom
+A = np.random.randint(0, 100, (m, n))
+B = np.random.randint(0, 100, (n, p))
+print('A:\n', A)
+print('B:\n', B)
+print('Correct A×B:\n', A.dot(B), '\n')
+
+print('- Sequential -')
+with time_manager():
+    C = mult(A, B, 'sequential')
+print(C, '\n')
+
+# Каждый порожденный процесс обрабатывает либо следующие part строк матрицы A,
+# либо все оставшиеся строки, если их осталось меньше, чем part.
+print('- Multiprocessing -')
+with time_manager():
+    if __name__ == '__main__':
+        threadNumber = 4
+        part = max(1, m // threadNumber)
+        mp_arr = Array('i', m * p)
+        C = mult(A, B, 'multiprocessing')
+print(C)
