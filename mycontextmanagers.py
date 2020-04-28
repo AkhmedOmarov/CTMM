@@ -16,10 +16,11 @@ class TimeManager:
 
 
 @contextmanager
-def time_manager():
+def time_manager(timebuffer = []):
     try:
         saved_time = time.time()
         yield saved_time
     finally:
         saved_time = time.time() - saved_time
         print("Time in time_manager function = " + str(saved_time))
+        timebuffer.append(saved_time)

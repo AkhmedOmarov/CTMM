@@ -1,11 +1,12 @@
 import numpy as np
 cimport numpy as np
 
-cpdef np.ndarray multcython(np.ndarray a, np.ndarray b):
+
+cpdef np.ndarray[int, ndim=2] multcython(np.ndarray[int, ndim=2] a, np.ndarray[int, ndim=2] b):
     cdef int m = len(a)
     cdef int n =  len(a[0])
     cdef int p = len(b[0])
-    cdef np.ndarray result = np.zeros((m, p), 'i')
+    cdef np.ndarray[int, ndim=2] result = np.zeros((m, p), 'i')
     cdef int i, j, k
     for i in range(m):
         for j in range(p):
