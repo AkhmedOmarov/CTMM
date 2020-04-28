@@ -1,7 +1,6 @@
 import numpy as np
-from mycontextmanagers import time_manager
-from mymult import mult
-# from multcython import *
+from mymodules.mycontextmanagers import time_manager
+from mymodules.mymult import mult
 
 
 def get_mean(x):
