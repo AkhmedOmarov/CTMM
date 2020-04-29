@@ -6,7 +6,7 @@ from tkinter import *
 
 window = pyglet.window.Window(width=800, height=600, resizable=False)
 rotation = 0.0
-model1 = pywavefront.Wavefront('model2.obj')
+mymodel = pywavefront.Wavefront('model2.obj')
 
 
 @window.event
@@ -14,7 +14,7 @@ def on_draw():
     window.clear()
     glLoadIdentity()
 
-    draw_box(model1, 0.0, 0.0)
+    draw_model(mymodel, 0.0, 0.0)
 
 
 @window.event
@@ -29,14 +29,14 @@ def on_resize(width, height):
     return True
 
 
-def draw_box(box, x, y):
+def draw_model(mymodel, x, y):
     glLoadIdentity()
     glTranslated(x, y, -40.0)
     glRotatef(rotation, 0.0, 1.0, 0.0)
     glRotatef(-25.0, 1.0, 0.0, 0.0)
     glRotatef(45.0, 0.0, 0.0, 1.0)
 
-    visualization.draw(box)
+    visualization.draw(mymodel)
 
 
 def update(dt):
