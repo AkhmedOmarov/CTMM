@@ -41,9 +41,9 @@ def draw_model(mymodel, x, y):
 
 def update(dt):
     global rotation
-    rotation += 90.0 * dt
+    rotation -= 1.35#90.0 * dt
 
-    if rotation > 720.0:
+    if rotation > 360.0:
         rotation = 0.0
 
 

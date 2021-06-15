@@ -1,6 +1,6 @@
 import numpy as np
 from multiprocessing import Pool
-from multcython import multcython
+from mymodules.multcython import multcython
 
 
 def mult(a, b, mode):
